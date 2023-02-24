@@ -23,5 +23,22 @@
                     Healthy
                 </div>
               </div>
+              <h2>Leave Your Scorthing Takes</h2>
+              <form action="/UNCroster/<%=roster._id  %>/takes" method="POST" class="mb-3 validated-form" novalidate>
+                <div class="mb-3">
+                  <label class="form-label" for="body">Hot Takes</label>
+                  <textarea class= "form-control" name="takes[body]" id="body" cols="30" rows="2" required></textarea>
+                  <div class="valid-feedback">
+                    🔥🔥🔥
+                  </div>
+                </div>
+                <button class="btn btn-success">Submit</button>
+              </form>
+              <div class="mb-3">
+                <%  for( let hotTakes of roster.takes) {%>
+                <p> <% hotTakes.body %>
+                </p>
+              </div>
+              <% } %>
         </div>
     </div>

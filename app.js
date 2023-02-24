@@ -2,11 +2,12 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejsEngine = require('ejs-mate');
-const Joi = require('joi');
+const {uncSchema, takes, takesSchema} = require('./schemas.js')
 const catchAsync = require('./utils/catchAsync');
 const ExpressError = require('./utils/ExpressError')
 const methodOverride = require('method-override');
 const Roster = require('./models/roster');
+const Takes = require('./models/takes')
 
 mongoose.set('strictQuery', true);
 // can remove if need be
@@ -33,17 +34,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
 const validateRoster = (req, res, next) =>{
-    const uncSchema = Joi.object({
-        roster: Joi.object({
-            name: Joi.string().required(),
-            title: Joi.string().required(),
-            height: Joi.string().required(),
-            hometown: Joi.string().required(),
-            weight: Joi.number().required(),
-            image: Joi.string().required(),
-        }).required()
-    })
-   const {error} = uncSchema.validate(req.body);
+
+   const {error} = uncSchema.validate(req.body, {
+    abortEarly: false,});
    if (error){
     const msg = error.details.map(el => el.message).join(',')
     throw new ExpressError(msg, 400)
@@ -51,6 +44,16 @@ const validateRoster = (req, res, next) =>{
     next();
    }
 };
+
+const validateTakes = (req, res, next) => {
+    const {error} = takesSchema.validate(req.body);
+    if (error){
+        const msg = error.details.map(el => el.message).join(',')
+        throw new ExpressError(msg, 400)
+       } else {
+        next();
+       }
+}
 
 app.get('/', (req, res) => {
     res.render('home')
@@ -77,7 +80,8 @@ app.post('/UNCroster', validateRoster, catchAsync(async (req, res, next) => {
 }));
 
 app.get('/UNCroster/:id', catchAsync(async (req, res) => {
-    const roster = await Roster.findById(req.params.id)
+    const roster = await Roster.findById(req.params.id).populate('hotTakes');
+    console.log(roster.hotTakes);
     res.render('UNCroster/show', { roster });
 }));
 
@@ -97,6 +101,16 @@ app.delete('/UNCroster/:id', catchAsync(async (req, res) => {
     await Roster.findByIdAndDelete(id);
     res.redirect('/UNCroster');
 }));
+
+app.post('/UNCroster/:id/takes', validateTakes, catchAsync(async (req,res) => {
+    const roster = await Roster.findById(req.params.id);
+    const takes = new Takes(req.body.takes);
+    roster.hotTakes.push(takes);
+    await takes.save();
+    await roster.save();
+    res.redirect(`/UNCroster/${roster._id}`)
+    // hotTakes is from RosterSchema object
+}))
 
 app.all('*', (req, res, next) =>{
     next(new ExpressError('Page Not Found', 404))
