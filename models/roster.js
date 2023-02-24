@@ -11,6 +11,11 @@ const RosterSchema = new Schema({
     weight: Number,
     class: String,
     title: String,
+    hotTakes: [
+        {type: Schema.Types.ObjectId,
+        ref: 'Takes'
+    }
+    ]
 
 });
 
