@@ -1,8 +1,8 @@
 <% layout('./layouts/boilerplate') %>
 
     <div class="row">
-        <div class="col-6 offset-3">
-            <div class="card mb-3" style="width: 18rem;">
+        <div class="col-6">
+            <div class="card mb-3">
                 <img src="<%= roster.image%>" class="card-img-top" alt="photo">
                 <div class="card-body">
                   <h5 class="card-title"><%= roster.name %></h5>
@@ -23,22 +23,30 @@
                     Healthy
                 </div>
               </div>
-              <h2>Leave Your Scorthing Takes</h2>
-              <form action="/UNCroster/<%=roster._id  %>/takes" method="POST" class="mb-3 validated-form" novalidate>
+
+        </div>
+        <div class="col-6">
+          <h2>Leave Your Scorthing Takes</h2>
+              <form action="/UNCroster/<%=roster._id  %>/take" method="POST" class="mb-3 validated-form" novalidate>
                 <div class="mb-3">
                   <label class="form-label" for="body">Hot Takes</label>
-                  <textarea class= "form-control" name="takes[body]" id="body" cols="30" rows="2" required></textarea>
+                  <textarea class= "form-control" name="take[body]" id="body" cols="30" rows="2" required></textarea>
                   <div class="valid-feedback">
                     🔥🔥🔥
                   </div>
                 </div>
                 <button class="btn btn-success">Submit</button>
               </form>
-              <div class="mb-3">
-                <%  for( let hotTakes of roster.takes) {%>
-                <p> <% hotTakes.body %>
-                </p>
+              <%  for( let hotTakes of roster.takes) {%>
+                <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Hot Take:</h5>
+              <p class="card-text"><%= hotTakes.body %></p>
+              <form action="/UNCroster/<%=roster._id%>/take/<%=hotTakes._id%>?_method=DELETE" method="POST">
+              <button class="btn btn-sm btn-danger"> Delete</button>
+              </form>
               </div>
+            </div>
               <% } %>
         </div>
     </div>

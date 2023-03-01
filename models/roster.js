@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Take = require('./take');
 const Schema = mongoose.Schema;
 
 const RosterSchema = new Schema({
@@ -11,12 +12,23 @@ const RosterSchema = new Schema({
     weight: Number,
     class: String,
     title: String,
-    hotTakes: [
+    takes: [
         {type: Schema.Types.ObjectId,
-        ref: 'Takes'
+        ref: 'Take'
     }
     ]
 
 });
+
+RosterSchema.post('findOneAndDelete', async function(doc){
+    if(doc){
+        await Take.deleteMany({
+            _id:{
+                $in: doc.takes
+            }
+        })
+
+    }
+})
 
 module.exports = mongoose.model('Roster', RosterSchema);

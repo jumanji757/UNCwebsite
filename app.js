@@ -2,12 +2,14 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejsEngine = require('ejs-mate');
-const {uncSchema, takes, takesSchema} = require('./schemas.js')
-const catchAsync = require('./utils/catchAsync');
-const ExpressError = require('./utils/ExpressError')
+const session = require('express-session');
+const flash = require('connect-flash');
+const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
-const Roster = require('./models/roster');
-const Takes = require('./models/takes')
+
+
+const roster = require('./routes/roster');
+const takes = require('./routes/takes');
 
 mongoose.set('strictQuery', true);
 // can remove if need be
@@ -32,85 +34,35 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const validateRoster = (req, res, next) =>{
-
-   const {error} = uncSchema.validate(req.body, {
-    abortEarly: false,});
-   if (error){
-    const msg = error.details.map(el => el.message).join(',')
-    throw new ExpressError(msg, 400)
-   } else {
-    next();
-   }
-};
-
-const validateTakes = (req, res, next) => {
-    const {error} = takesSchema.validate(req.body);
-    if (error){
-        const msg = error.details.map(el => el.message).join(',')
-        throw new ExpressError(msg, 400)
-       } else {
-        next();
-       }
+const sessionConfig ={
+    secret: 'uncTarheel2023',
+    resave: false,
+    saveUnitialized: true,
+    cookie: {
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
 }
+app.use(session(sessionConfig));
+app.use(flash());
+
+app.use((req, res, next) =>{
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error')
+    next();
+})
 
 app.get('/', (req, res) => {
     res.render('home')
 });
 
-app.get('/UNCroster', async (req, res) => {
-    const rosters = await Roster.find({});
-    res.render('UNCroster/index', { rosters })
-});
+app.use('/UNCroster', roster)
+app.use('/UNCroster/:id/take', takes)
 
-app.get('/UNCroster/new', (req, res) => {
-    res.render('UNCroster/new');
-});
 
-app.get('/UNCroster/highlights', (req, res) => {
-    res.render('UNCroster/highlights');
-});
-
-app.post('/UNCroster', validateRoster, catchAsync(async (req, res, next) => {
-    const roster = new Roster(req.body.uncroster);
-    await roster.save();
-    res.redirect(`/UNCroster/${roster._id}`)
-
-}));
-
-app.get('/UNCroster/:id', catchAsync(async (req, res) => {
-    const roster = await Roster.findById(req.params.id).populate('hotTakes');
-    console.log(roster.hotTakes);
-    res.render('UNCroster/show', { roster });
-}));
-
-app.get('/UNCroster/:id/edit', catchAsync(async (req, res) => {
-    const roster = await Roster.findById(req.params.id)
-    res.render('UNCroster/edit', { roster });
-}));
-
-app.put('/UNCroster/:id', validateRoster, catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const roster = await Roster.findByIdAndUpdate(id, { ...req.body.uncroster });
-    res.redirect(`/UNCroster/${roster._id}`);
-}));
-
-app.delete('/UNCroster/:id', catchAsync(async (req, res) => {
-    const { id } = req.params;
-    await Roster.findByIdAndDelete(id);
-    res.redirect('/UNCroster');
-}));
-
-app.post('/UNCroster/:id/takes', validateTakes, catchAsync(async (req,res) => {
-    const roster = await Roster.findById(req.params.id);
-    const takes = new Takes(req.body.takes);
-    roster.hotTakes.push(takes);
-    await takes.save();
-    await roster.save();
-    res.redirect(`/UNCroster/${roster._id}`)
-    // hotTakes is from RosterSchema object
-}))
 
 app.all('*', (req, res, next) =>{
     next(new ExpressError('Page Not Found', 404))
