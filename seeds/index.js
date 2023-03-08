@@ -24,12 +24,13 @@ const seedDB = async () => {
     await Roster.deleteMany({});
     for (let i = 0; i < 7; i++) {
         const random7 = Math.floor(Math.random() * 7);
-        const number = Math.floor(Math.random() * 55);
+        const rnumber = Math.floor(Math.random() * 55);
         const rost = new Roster({
+            author: '6400de2486bf9c84fbef2af8',
             name: `${players[random7].name}, ${players[random7].position}`,
             title: `${sample(styles)} ${sample(dpositions)}`,
             image: 'http://t0.gstatic.com/licensed-image?q=tbn:ANd9GcSOQnBMIm2y0_I0AK7ia68lu5AOAlPyvokyvU5JEDiOtbN7_QkmIUWnWzWUKu8y2hvNZMZKppdkP38HO8Q',
-            number
+            number: rnumber
         })
         await rost.save();
     }

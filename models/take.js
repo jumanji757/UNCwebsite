@@ -3,6 +3,10 @@ const Schema = mongoose.Schema;
 
 const takeSchema = new Schema({
     body: String,
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }
 });
 
 module.exports = mongoose.model("Take", takeSchema)

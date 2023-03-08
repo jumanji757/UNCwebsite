@@ -12,6 +12,10 @@ const RosterSchema = new Schema({
     weight: Number,
     class: String,
     title: String,
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     takes: [
         {type: Schema.Types.ObjectId,
         ref: 'Take'
