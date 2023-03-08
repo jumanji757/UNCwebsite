@@ -6,10 +6,13 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
+const passport = require('passport');
+const localStrategy = require('passport-local');
+const User = require('./models/user');
 
-
-const roster = require('./routes/roster');
-const takes = require('./routes/takes');
+const usersRoutes = require('./routes/users')
+const rosterRoutes = require('./routes/roster');
+const takesRoutes = require('./routes/takes');
 
 mongoose.set('strictQuery', true);
 // can remove if need be
@@ -46,21 +49,34 @@ const sessionConfig ={
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
 }
+
 app.use(session(sessionConfig));
 app.use(flash());
 
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new localStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 app.use((req, res, next) =>{
+    console.log(req.session);
+    res.locals.signedIn = req.user;
+    // currentUserf
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error')
     next();
 })
 
+
 app.get('/', (req, res) => {
     res.render('home')
 });
 
-app.use('/UNCroster', roster)
-app.use('/UNCroster/:id/take', takes)
+app.use('/', usersRoutes)
+app.use('/UNCroster', rosterRoutes)
+app.use('/UNCroster/:id/take', takesRoutes)
 
 
 

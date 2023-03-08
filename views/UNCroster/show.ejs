@@ -13,12 +13,15 @@
                   <li class="list-group-item"><%= roster.height %> , <%= roster.weight %></li>
                   <li class="list-group-item"><%= roster.hometown %></li>
                 </ul>
+                <% if(signedIn && roster.author.equals(signedIn._id)) { %>
+                  <!-- hides edit button if not signed in -->
                 <div class="card-body">
                   <a class="card-link btn btn-info" href="/UNCroster/<%= roster._id %>/edit" >Edit Player</a>
                   <form class="d-inline" action="/UNCroster/<%= roster._id%>?_method=DELETE" method="POST">
                     <button class="btn btn-danger">Delete</button>
                 </form>
                 </div>
+              <% } %>
                 <div class="card-footer text-muted">
                     Healthy
                 </div>
@@ -26,6 +29,7 @@
 
         </div>
         <div class="col-6">
+          <% if(signedIn) { %>
           <h2>Leave Your Scorthing Takes</h2>
               <form action="/UNCroster/<%=roster._id  %>/take" method="POST" class="mb-3 validated-form" novalidate>
                 <div class="mb-3">
@@ -37,14 +41,18 @@
                 </div>
                 <button class="btn btn-success">Submit</button>
               </form>
+              <% } %>
               <%  for( let hotTakes of roster.takes) {%>
                 <div class="card mb-3">
               <div class="card-body">
                 <h5 class="card-title">Hot Take:</h5>
               <p class="card-text"><%= hotTakes.body %></p>
+              <h6 class="card-subtitle mb-2 text-muted">By <%= hotTakes.author.username  %></h6>
+              <% if(signedIn && hotTakes.author.equals(signedIn._id)) { %>
               <form action="/UNCroster/<%=roster._id%>/take/<%=hotTakes._id%>?_method=DELETE" method="POST">
               <button class="btn btn-sm btn-danger"> Delete</button>
               </form>
+              <% } %>
               </div>
             </div>
               <% } %>
